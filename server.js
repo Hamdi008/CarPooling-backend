@@ -8,7 +8,7 @@ require("./config/connect");
 const bcrypt = require("bcrypt");
 var bodyParser = require('body-parser');
 const User = require('./models/user');
-const { connectRedis } = require('./config/redisClient');
+const { redisClient, connectRedis } = require('./config/redisClient');
 const authenticate = require('./middleware/authMiddleware');
 
 
@@ -127,6 +127,19 @@ app.post("/register", async(req,res)=>{
     }
 });
 
+
+app.post('/logout', async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(400).json({ message: 'Token missing' });
+
+  try {
+    await redisClient.set(token, 'blacklisted', { EX: 3600 }); // e.g., 1 hour
+    res.status(200).json({ message: 'Logged out' });
+  } catch (err) {
+    console.error('Redis set failed:', err);
+    res.status(500).json({ message: 'Logout failed' });
+  }
+});
 
 
 // Connect to Redis before starting the server
