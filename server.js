@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { connectRedis } = require('./config/redisClient');
 const userRoutes = require('./routes/user');
+const smsRoutes = require('./routes/sms');
 require('./config/connect'); // DB connection
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api', userRoutes);
+app.use('/api/sms', smsRoutes);
 
 // Start server after Redis is connected
 connectRedis()
