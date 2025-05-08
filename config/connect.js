@@ -1,17 +1,9 @@
-//mongoose is required to connect to MongoDB
-const mongoose = require("mongoose")
+const mongoose = require('mongoose');
 
-//this will connect to CarPoolingDB database in mongoDB, if CarPoolingDB does not exist, it will be created automatically.
-mongoose.connect("mongodb://localhost:27017/CarPoolingDB")
-.then(
-    ()=>{
-        console.log("CarPoolingDB database is connected");
-    }
-)
-.catch(
-    (err)=>{
-        console.log(err);
-    }
-)
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/CarPoolingDB';
 
-module.exports = mongoose
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('Connected to CarPoolingDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+module.exports = mongoose;

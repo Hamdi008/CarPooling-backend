@@ -1,43 +1,36 @@
 // middleware/authMiddleware.js
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const { redisClient }= require('../config//redisClient');
+const { redisClient } = require('../config/redisClient');
 
-async function isTokenBlacklisted(token) {
-    try {
-      const result = await redisClient.get(token);
-      return result === 'blacklisted';
-    } catch (err) {
-      console.error('Redis error:', err);
-      return false;
-    }
+const isTokenBlacklisted = async (token) => {
+  try {
+    return (await redisClient.get(token)) === 'blacklisted';
+  } catch (err) {
+    console.error('Redis error:', err);
+    return false;
   }
-  
+};
 
 const authenticate = async (req, res, next) => {
-  console.log(`Starting authenticate `)
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Expecting: "Bearer TOKEN"
-  console.log(`authenticateToken token  = ${token}`)
+  const token = authHeader?.split(' ')[1]; // Expecting: "Bearer <token>"
 
   if (!token) {
-    console.log(`Token missing`)
+    console.warn('Token missing');
     return res.status(401).json({ message: 'Token missing' });
   }
 
   if (await isTokenBlacklisted(token)) {
-    console.log(`Token is blacklisted`)
-
+    console.warn('Token is blacklisted');
     return res.status(401).json({ message: 'Token is blacklisted' });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    console.log(`Token verified successfully`)
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch (err) {
-    console.log(`Invalid token`)
+    console.warn('Invalid token:', err.message);
     return res.status(403).json({ message: 'Invalid token' });
   }
 };
